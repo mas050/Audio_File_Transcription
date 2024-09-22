@@ -6,4 +6,4 @@ matplotlib
 seaborn
 tabulate
 pyperclip
-moviepy.editor
+moviepy

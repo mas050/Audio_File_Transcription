@@ -106,12 +106,24 @@ def main():
         audio_files = [f for f in os.listdir(output_dir) if f.endswith(".m4a")]
         audio_files.sort(key=lambda f: int(re.search(r'_(\d+)\.m4a$', f).group(1)))
 
+        # Initialize progress bar with a label
+        progress_bar = st.progress(0, text="Transcription Progress") 
+        progress_text = st.empty()  # To display progress text
+
+
         # Transcribe each segment and combine transcripts
         full_transcript = ""
-        for audio_file in audio_files:
+        for i, audio_file in enumerate(audio_files):
             audio_path = os.path.join(output_dir, audio_file)
             segment_transcript = transcribe_audio(audio_path)
             full_transcript += segment_transcript
+
+            # Update progress bar and text
+            progress = (i + 1) / len(audio_files)
+            progress_bar.progress(progress)
+            progress_text.text(f"Transcribing... {int(progress * 100)}%")
+
+        progress_text.empty()  # Clear the progress text after completion
 
         # Display the transcript in a scrollable container
         #st.header("Transcript")

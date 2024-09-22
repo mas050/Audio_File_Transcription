@@ -7,3 +7,4 @@ seaborn
 tabulate
 pyperclip
 AudioFileClip
+moviepy.editor

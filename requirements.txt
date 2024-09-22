@@ -6,5 +6,4 @@ matplotlib
 seaborn
 tabulate
 pyperclip
-AudioFileClip
-moviepy
+moviepy.editor

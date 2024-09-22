@@ -31,15 +31,16 @@ def copy_to_clipboard_button(text_to_copy):
     """)
 
 
-def split_audio_moviepy(input_file, output_dir, segment_length = 180):
+def split_audio_moviepy(input_file, output_dir, segment_length=180, chunk_progress_bar=None, chunk_progress_text=None):
+
     """Splits an audio file into segments using MoviePy.
 
     Args:
         input_file (str): Path to the input audio file (m4a).
         output_dir (str): Directory to save the output audio files.
-        segment_length (int, optional): Length of each segment in seconds (default: 60).
+        segment_length (int, optional): Length of each segment in seconds (default: 180).
     """
-    
+
     # Load the audio file
     audio = AudioFileClip(input_file)
     total_duration = audio.duration
@@ -49,6 +50,9 @@ def split_audio_moviepy(input_file, output_dir, segment_length = 180):
 
     # Get the original filename without extension
     base_filename = os.path.splitext(os.path.basename(input_file))[0]
+
+    # Calculate total number of chunks for progress bar
+    total_chunks = int(total_duration / segment_length) + (1 if total_duration % segment_length else 0) 
 
     # Split and save segments
     start_time = 0
@@ -65,10 +69,18 @@ def split_audio_moviepy(input_file, output_dir, segment_length = 180):
 
         # Export the segment
         subclip.write_audiofile(output_path, codec='aac')  # Ensure AAC codec for m4a
-        
+
         # Update for the next segment
-        start_time = end_time 
+        start_time = end_time
         segment_id += 1
+
+        # Update chunking progress bar only if the variables are provided
+        if chunk_progress_bar and chunk_progress_text:
+            chunk_progress = segment_id / total_chunks
+            # Clamp chunk_progress between 0 and 1
+            chunk_progress = max(0, min(chunk_progress, 1)) 
+            chunk_progress_bar.progress(chunk_progress)
+            chunk_progress_text.text(f"Chunking... {int(chunk_progress * 100)}%")
 
 
 def transcribe_audio(audio_file):
@@ -84,7 +96,6 @@ def transcribe_audio(audio_file):
     return translation
 
 def main():
-
     # Initialize session state for messages if it doesn't exist
     if "messages" not in st.session_state:
         st.session_state.messages = []
@@ -98,18 +109,28 @@ def main():
         with open("temp_audio.m4a", "wb") as f:
             f.write(uploaded_file.read())
 
-        # Split audio if necessary (you might want to adjust this based on your needs)
+        # Split audio if necessary
         output_dir = "temp_audio_splits"
-        split_audio_moviepy("temp_audio.m4a", output_dir)
+
+        # Initialize chunking progress bar
+        chunk_progress_bar = st.progress(0, text="Chunking Progress")
+        chunk_progress_text = st.empty()
+
+        # Split the audio and update the progress bar. Pass the progress bar and text elements 
+        split_audio_moviepy("temp_audio.m4a", output_dir, chunk_progress_bar=chunk_progress_bar, chunk_progress_text=chunk_progress_text) 
+
+        # Set chunking progress bar to 100% after completion
+        chunk_progress_bar.progress(1.0)  
+        chunk_progress_text.text(f"Chunking process of the file completed!")
+
 
         # Get audio files and sort them
         audio_files = [f for f in os.listdir(output_dir) if f.endswith(".m4a")]
         audio_files.sort(key=lambda f: int(re.search(r'_(\d+)\.m4a$', f).group(1)))
 
-        # Initialize progress bar with a label
-        progress_bar = st.progress(0, text="Transcription Progress") 
+        # Initialize transcription progress bar
+        progress_bar = st.progress(0, text="Transcription Progress")
         progress_text = st.empty()  # To display progress text
-
 
         # Transcribe each segment and combine transcripts
         full_transcript = ""
@@ -123,14 +144,9 @@ def main():
             progress_bar.progress(progress)
             progress_text.text(f"Transcribing... {int(progress * 100)}%")
 
-        progress_text.empty()  # Clear the progress text after completion
-
-        # Display the transcript in a scrollable container
-        #st.header("Transcript")
-        #text_container = st.container()  # Create a container for the text
-        #with text_container:
-        #    st.text_area("", value=full_transcript, height=300)  # Use st.text_area for scrolling
-
+        # Set transcription progress bar to 100% after completion
+        progress_bar.progress(1.0) 
+        progress_text.text(f"Transcription process completed!")
 
         # Append the transcript to the message history
         st.session_state.messages.append({"role": "assistant", "content": full_transcript})
@@ -142,9 +158,6 @@ def main():
 
                 if message["role"] == "assistant":
                     copy_to_clipboard_button(message["content"])
-
-
-
 
         # Clean up temporary files (optional)
         os.remove("temp_audio.m4a")

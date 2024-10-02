@@ -6,7 +6,7 @@ from groq import Groq
 from streamlit.components.v1 import html
 
 # Initialize Groq client (Make sure your API key is set correctly)
-API_KEY = "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" 
+API_KEY = "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" 
 os.environ["GROQ_API_KEY"] = API_KEY
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 

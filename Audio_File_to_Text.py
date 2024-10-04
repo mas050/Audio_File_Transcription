@@ -31,7 +31,7 @@ def copy_to_clipboard_button(text_to_copy):
     """)
 
 
-def split_audio_moviepy(input_file, output_dir, segment_length=180, chunk_progress_bar=None, chunk_progress_text=None):
+def split_audio_moviepy(input_file, output_dir, segment_length=20, chunk_progress_bar=None, chunk_progress_text=None):
 
     """Splits an audio file into segments using MoviePy.
 

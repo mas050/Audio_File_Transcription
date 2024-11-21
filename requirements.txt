@@ -8,4 +8,3 @@ tabulate
 pyperclip
 moviepy
 imageio[ffmpeg]
-ffmpeg-python

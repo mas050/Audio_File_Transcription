@@ -6,6 +6,6 @@ matplotlib
 seaborn
 tabulate
 pyperclip
-moviepy
+moviepy==1.0.3
 imageio[ffmpeg]
 ffmpeg-python
